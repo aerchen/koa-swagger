@@ -7,129 +7,104 @@
 var _ = require('lodash');
 var debug = require('debug')('koa-swagger-ui');
 var fs = require('fs');
-var parseurl = require('parseurl');
 var path = require('path');
 var serveStatic = require('koa-static');
-
-var defaultOptions = {
-  apiDocs: '/api-docs',
-  swaggerUi: '/docs'
-};
-var staticOptions = {};
 
 /**
  * Middleware for serving the Swagger documents and Swagger UI.
  *
- * @param {object} rlOrSO - The Swagger Object (Swagger 2.0)
- * @param {object} [options] - The configuration options
+ * @param {object} [schema] [required] - The Swagger Object (Swagger 2.0)
+ * @param {object} [options] [optional] - The configuration options
  * @param {string=/api-docs} [options.apiDocs] - The relative path to serve your Swagger documents from
  * @param {string=/docs} [options.swaggerUi] - The relative path to serve Swagger UI from
  * @param {string} [options.swaggerUiDir] - The filesystem path to your custom swagger-ui deployment to serve
+ * @param {object} [options.staticOptions] - The static server options for koa-static
  *
  * @returns the middleware function
  */
-exports = module.exports = function (rlOrSO, options) {
-  debug('Initializing swagger-ui middleware');
 
-  var apiDocsCache = {}; // Swagger document endpoints cache
-  var apiDocsPaths = [];
-  var staticMiddleware;
-  var swaggerApiDocsURL;
-  var swaggerUiPath;
+const defaultOptions = {
+  apiDocs: '/api-docs',
+  swaggerUi: '/docs',
+  staticOptions: {},
+};
 
-  // Set the defaults
-  options = _.defaults(options || {}, defaultOptions);
+exports = module.exports = function (schema, options) {
+  debug('Initializing koa-swagger-ui middleware');
 
-  if (_.isUndefined(rlOrSO)) {
-    throw new Error('rlOrSO is required');
-  } else if (!_.isPlainObject(rlOrSO)) {
-    throw new TypeError('rlOrSO must be an object');
+  // validate swagger schema
+  if (_.isUndefined(schema)) {
+    throw new Error('schema is required');
+  } else if (!_.isObject(schema)) {
+    throw new TypeError('schema must be an object');
   }
+  // Swagger document endpoints cache
+  const apiDocsCache = JSON.stringify(schema, null, 2);
 
-  swaggerUiPath = options.swaggerUiDir ?
-    path.resolve(options.swaggerUiDir) :
-    path.join(__dirname, 'swagger-ui');
-
-  if (options.swaggerUiDir) {
-    if (!fs.existsSync(swaggerUiPath)) {
-      throw new Error('options.swaggerUiDir path does not exist: ' + swaggerUiPath);
-    } else if (!fs.statSync(swaggerUiPath).isDirectory()) {
-      throw new Error('options.swaggerUiDir path is not a directory: ' + swaggerUiPath);
-    }
+  options = _.merge(defaultOptions, options);
+  let {apiDocs, swaggerUi, swaggerUiDir, staticOptions} = options;
+  // validate swagger ui static file dir
+  const swaggerUiDirPath = swaggerUiDir ? path.resolve(swaggerUiDir) : path.join(__dirname, 'swagger-ui');
+  if (!fs.existsSync(swaggerUiDirPath)) {
+    throw new Error('options.swaggerUiDir path does not exist: ' + swaggerUiPath);
+  } else if (!fs.statSync(swaggerUiDirPath).isDirectory()) {
+    throw new Error('options.swaggerUiDir path is not a directory: ' + swaggerUiPath);
   }
-
-  staticMiddleware = serveStatic(swaggerUiPath, staticOptions);
 
   // Sanitize values
-  if (!options.apiDocs.startsWith('/')) {
-    options.apiDocs = '/' + options.apiDocs;
+  if (!apiDocs.startsWith('/')) {
+    apiDocs = '/' + apiDocs;
   }
-  if (options.apiDocs.charAt(options.apiDocs.length -1) === '/') {
-    options.apiDocs = options.apiDocs.substring(0, options.apiDocs.length - 1);
+  if (apiDocs.endsWith('/')) {
+    apiDocs = apiDocs.slice(0, -1);
   }
-  if (!options.swaggerUi.startsWith('/')) {
-    options.swaggerUi = '/' + options.swaggerUi;
+  if (!swaggerUi.startsWith('/')) {
+    swaggerUi = '/' + swaggerUi;
   }
-  if (options.swaggerUi.charAt(options.swaggerUi.length -1) === '/') {
-    options.swaggerUi = options.swaggerUi.substring(0, options.swaggerUi.length - 1);
+  if (swaggerUi.endsWith('/')) {
+    swaggerUi = swaggerUi.slice(0, -1);
   }
 
-  debug('  Using swagger-ui from: %s', options.swaggerUiDir ? swaggerUiPath : 'internal');
-  debug('  API Docs path: %s', options.apiDocs);
+  debug('Using swagger-ui static from:', swaggerUiDir ? swaggerUiDirPath : 'internal');
+  debug('API Docs path:', apiDocs);
+  debug('Swagger Ui path:', swaggerUi);
 
-  // Add the Resource Listing or SwaggerObject to the response cache
-  apiDocsCache[options.apiDocs] = JSON.stringify(rlOrSO, null, 2);
+  return async function (ctx, next) {
+    const {method, path} = ctx;
+    debug('request', method, path);
 
-  apiDocsPaths = Object.keys(apiDocsCache);
+    const isApiDocsPath = path === apiDocs;
+    const isSwaggerUiPath = path.startsWith(swaggerUi);
 
-  debug('  swagger-ui path: %s', options.swaggerUi);
-
-  return async function swaggerUI (ctx, next) {
-    var path = parseurl(ctx.req).pathname;
-    var isApiDocsPath = apiDocsPaths.indexOf(path) > -1;
-    var isSwaggerUiPath = path === options.swaggerUi || path.indexOf(options.swaggerUi + '/') === 0;
-
-    if (_.isUndefined(swaggerApiDocsURL)) {
-      // Start with the original path
-      swaggerApiDocsURL = parseurl.original(ctx.req).pathname;
-
-      // Remove the part after the mount point
-      swaggerApiDocsURL = swaggerApiDocsURL.substring(0, swaggerApiDocsURL.indexOf(ctx.req.url));
-
-      // Add the API docs path and remove any double dashes
-      swaggerApiDocsURL = ((options.swaggerUiPrefix ? options.swaggerUiPrefix : '') + swaggerApiDocsURL + options.apiDocs).replace(/\/\//g, '/');
-    }
-
-    debug('%s %s', ctx.req.method, ctx.req.url);
-    debug('  Will process: %s', isApiDocsPath || isSwaggerUiPath ? 'yes' : 'no');
+    debug('Will process:', isApiDocsPath || isSwaggerUiPath ? 'yes' : 'no');
 
     if (!(isApiDocsPath || isSwaggerUiPath)) {
       await next();
       return;
     }
 
-    if (path === options.swaggerUi) {
-      ctx.redirect(options.swaggerUi + '/');
+    if (path === swaggerUi) {
+      debug(`Redirect to ${swaggerUi}/`);
+      ctx.redirect(swaggerUi + '/');
       return;
     }
 
     if (isApiDocsPath) {
-      debug('  Serving API Docs');
+      debug('Serving API Docs');
       ctx.set('Content-Type', 'application/json');
-      ctx.body = apiDocsCache[path];
+      ctx.body = apiDocsCache;
       return;
     }
 
     debug('Serving swagger-ui');
+    ctx.set('Swagger-API-Docs-URL', apiDocs);
 
-    ctx.set('Swagger-API-Docs-URL', swaggerApiDocsURL);
-
-    if (path === options.swaggerUi || path === options.swaggerUi + '/') {
+    if (path === swaggerUi + '/') {
       ctx.path = '/';
     } else {
-      ctx.path = ctx.req.url.substring(options.swaggerUi.length);
+      ctx.path = path.substring(swaggerUi.length);
     }
 
-    return staticMiddleware(ctx, next);
+    return serveStatic(swaggerUiDirPath, staticOptions)(ctx, next);
   };
 };
