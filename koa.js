@@ -12,21 +12,12 @@ var jsyaml = require('js-yaml');
 var spec = fs.readFileSync(path.join(__dirname,'api/swagger.yaml'), 'utf8');
 var swaggerDoc = jsyaml.safeLoad(spec);
 
-const swaggerUi = function (options) {
-  var swaggerUi = require('./koa-swagger-ui');
-  var suArgs = [swaggerDoc];
-
-  suArgs.push(options || {});
-
-  return swaggerUi(...suArgs);
-};
-
 app.use(async (ctx, next) => {
   await next().catch(console.error.bind(null, 'errorHandler'));
 });
 
 // Serve the Swagger documents and Swagger UI
-app.use(swaggerUi());
+app.use(require('./koa-swagger-ui')(swaggerDoc));
 
 app.use(async (ctx, next) => {
   ctx.body = ctx.request;
