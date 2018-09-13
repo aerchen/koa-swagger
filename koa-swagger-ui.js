@@ -4,7 +4,7 @@
 
 'use strict';
 
-var _ = require('lodash-compat');
+var _ = require('lodash');
 var debug = require('debug')('koa-swagger-ui');
 var fs = require('fs');
 var parseurl = require('parseurl');
