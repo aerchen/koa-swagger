@@ -33,7 +33,7 @@ var serveStatic = require('koa-static');
 
 var defaultOptions = {
   apiDocs: '/api-docs',
-  swaggerUi: '/docs/'
+  swaggerUi: '/docs'
 };
 var staticOptions = {};
 
@@ -140,11 +140,9 @@ exports = module.exports = function (rlOrSO, options) {
       return;
     }
 
-    debug('  Serving swagger-ui');
+    debug('Serving swagger-ui');
 
     ctx.set('Swagger-API-Docs-URL', swaggerApiDocsURL);
-
-
 
     if (path === options.swaggerUi || path === options.swaggerUi + '/') {
       ctx.path = '/';

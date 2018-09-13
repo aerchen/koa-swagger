@@ -18,7 +18,7 @@ const swaggerUi = function (options) {
 
   suArgs.push(options || {});
 
-  return swaggerUi.apply(undefined, suArgs);
+  return swaggerUi(...suArgs);
 };
 
 app.use(async (ctx, next) => {
@@ -26,7 +26,7 @@ app.use(async (ctx, next) => {
 });
 
 // Serve the Swagger documents and Swagger UI
-app.use(swaggerUi({swaggerUi: 'swagger'}));
+app.use(swaggerUi());
 
 app.use(async (ctx, next) => {
   ctx.body = ctx.request;
