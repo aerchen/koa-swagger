@@ -4,11 +4,11 @@
 
 'use strict';
 
-var _ = require('lodash');
-var debug = require('debug')('koa-swagger-ui');
-var fs = require('fs');
-var path = require('path');
-var serveStatic = require('koa-static');
+const _ = require('lodash');
+const fs = require('fs');
+const path = require('path');
+const serveStatic = require('koa-static');
+const debug = require('debug')('koa-swagger-ui');
 
 /**
  * Middleware for serving the Swagger documents and Swagger UI.
@@ -50,6 +50,7 @@ exports = module.exports = function (schema, options) {
   } else if (!fs.statSync(swaggerUiDirPath).isDirectory()) {
     throw new Error('options.swaggerUiDir path is not a directory: ' + swaggerUiPath);
   }
+  const staticMiddle = serveStatic(swaggerUiDirPath, staticOptions);
 
   // Sanitize values
   if (!apiDocs.startsWith('/')) {
@@ -105,6 +106,6 @@ exports = module.exports = function (schema, options) {
       ctx.path = path.substring(swaggerUi.length);
     }
 
-    return serveStatic(swaggerUiDirPath, staticOptions)(ctx, next);
+    return staticMiddle(ctx, next);
   };
 };
