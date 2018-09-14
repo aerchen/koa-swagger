@@ -20,30 +20,22 @@ var options = {
 var spec = fs.readFileSync(path.join(__dirname,'api/swagger.yaml'), 'utf8');
 var swaggerDoc = jsyaml.safeLoad(spec);
 
-const swaggerUi = function (options) {
-  var swaggerUi = require('./swagger-ui');
-  var suArgs = [swaggerDoc];
-
-  suArgs.push(options || {});
-
-  return swaggerUi.apply(undefined, suArgs);
-};
-
-// Serve the Swagger documents and Swagger UI
-app.use(swaggerUi());
-
 // Initialize the Swagger middleware
 swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
 
 
   // Interpret Swagger resources and attach metadata to request - must be first in swagger-tools middleware chain
-  app.use(middleware.swaggerMetadata());
+  app.use(require('./swagger-metadata')(swaggerDoc));
 
   // Validate Swagger requests
   app.use(middleware.swaggerValidator());
 
   // Route validated requests to appropriate controller
   app.use(middleware.swaggerRouter(options));
+
+
+  // Serve the Swagger documents and Swagger UI
+  app.use(middleware.swaggerUi());
 
   // Start the server
   http.createServer(app).listen(serverPort, function () {
