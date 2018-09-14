@@ -1,0 +1,634 @@
+---
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "管理员用户和权限管理"
+basePath: "/"
+tags:
+- name: "login"
+  description: "用户登录"
+- name: "user"
+  description: "用户管理"
+- name: "role"
+  description: "角色管理"
+- name: "scope"
+  description: "资源管理"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+paths:
+  /login:
+    post:
+      tags:
+      - "login"
+      summary: "管理员登录"
+      operationId: "loginPOST"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: false
+        schema:
+          $ref: "#/definitions/body"
+      responses:
+        200:
+          description: "创建成功"
+          schema:
+            $ref: "#/definitions/inline_response_200"
+        400:
+          description: "请求参数错误"
+        500:
+          description: "服务器内部错误"
+      x-swagger-router-controller: "Login"
+  /scopes:
+    get:
+      tags:
+      - "scope"
+      summary: "获取权限列表"
+      operationId: "scopesGET"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "token"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "获取成功"
+          schema:
+            $ref: "#/definitions/inline_response_200_1"
+        400:
+          description: "请求参数错误"
+        500:
+          description: "服务器内部错误"
+      x-swagger-router-controller: "Scope"
+  /users:
+    get:
+      tags:
+      - "user"
+      summary: "获取管理员列表"
+      operationId: "usersGET"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "token"
+        required: true
+        type: "string"
+      - name: "limit"
+        in: "query"
+        description: "单次返回最大数量"
+        required: false
+        type: "integer"
+        default: 20
+        maximum: 50
+        minimum: 1
+      - name: "skip"
+        in: "query"
+        description: "从第几个开始"
+        required: false
+        type: "integer"
+        default: 0
+        minimum: 0
+      - name: "enable"
+        in: "query"
+        description: "token"
+        required: false
+        type: "boolean"
+      responses:
+        200:
+          description: "创建成功"
+          schema:
+            $ref: "#/definitions/user"
+        400:
+          description: "请求参数错误"
+        500:
+          description: "服务器内部错误"
+      x-swagger-router-controller: "User"
+    post:
+      tags:
+      - "user"
+      summary: "添加管理员用户"
+      operationId: "usersPOST"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "token"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        required: false
+        schema:
+          $ref: "#/definitions/body_1"
+      responses:
+        200:
+          description: "创建成功"
+          schema:
+            $ref: "#/definitions/user"
+        400:
+          description: "请求参数错误"
+        500:
+          description: "服务器内部错误"
+      x-swagger-router-controller: "User"
+  /users/{id}:
+    get:
+      tags:
+      - "user"
+      summary: "获取用户详情"
+      operationId: "usersIdGET"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "token"
+        required: true
+        type: "string"
+      - name: "id"
+        in: "path"
+        description: "token"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "获取用户详情成功"
+          schema:
+            $ref: "#/definitions/user"
+        400:
+          description: "请求参数错误"
+          schema:
+            $ref: "#/responses/parametersError"
+        500:
+          description: "服务器内部错误"
+      x-swagger-router-controller: "User"
+    put:
+      tags:
+      - "user"
+      summary: "添加管理员用户"
+      operationId: "usersIdPUT"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "token"
+        required: true
+        type: "string"
+      - name: "id"
+        in: "path"
+        description: "token"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        required: false
+        schema:
+          $ref: "#/definitions/body_2"
+      responses:
+        200:
+          description: "修改成功"
+          schema:
+            $ref: "#/definitions/user"
+        400:
+          description: "请求参数错误"
+        500:
+          description: "服务器内部错误"
+      x-swagger-router-controller: "User"
+    delete:
+      tags:
+      - "user"
+      summary: "删除管理员"
+      operationId: "usersIdDELETE"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "token"
+        required: true
+        type: "string"
+      - name: "id"
+        in: "path"
+        description: "token"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "获取用户详情成功"
+          schema:
+            $ref: "#/definitions/user"
+        400:
+          description: "请求参数错误"
+        500:
+          description: "服务器内部错误"
+      x-swagger-router-controller: "User"
+  /roles:
+    get:
+      tags:
+      - "role"
+      summary: "获取角色列表"
+      operationId: "rolesGET"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "token"
+        required: true
+        type: "string"
+      - name: "limit"
+        in: "query"
+        description: "单次返回最大数量"
+        required: false
+        type: "integer"
+        default: 20
+        maximum: 50
+        minimum: 1
+      - name: "skip"
+        in: "query"
+        description: "从第几个开始"
+        required: false
+        type: "integer"
+        default: 0
+        minimum: 0
+      - name: "enable"
+        in: "query"
+        description: "token"
+        required: false
+        type: "boolean"
+      responses:
+        200:
+          description: "获取角色列表成功"
+          schema:
+            $ref: "#/definitions/inline_response_200_2"
+        400:
+          description: "请求参数错误"
+          schema:
+            $ref: "#/responses/parametersError"
+        500:
+          description: "服务器内部错误"
+      x-swagger-router-controller: "Role"
+    post:
+      tags:
+      - "role"
+      summary: "添加角色"
+      operationId: "rolesPOST"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "token"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        required: false
+        schema:
+          $ref: "#/definitions/body_3"
+      responses:
+        200:
+          description: "创建成功"
+          schema:
+            $ref: "#/definitions/role"
+        400:
+          description: "请求参数错误"
+        500:
+          description: "服务器内部错误"
+      x-swagger-router-controller: "Role"
+  /roles/{id}:
+    get:
+      tags:
+      - "role"
+      summary: "获取角色详情"
+      operationId: "rolesIdGET"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "token"
+        required: true
+        type: "string"
+      - name: "id"
+        in: "path"
+        description: "token"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "ok"
+          schema:
+            $ref: "#/definitions/role"
+        400:
+          description: "请求参数错误"
+          schema:
+            $ref: "#/responses/parametersError"
+        500:
+          description: "服务器内部错误"
+      x-swagger-router-controller: "Role"
+    put:
+      tags:
+      - "role"
+      summary: "修改角色信息"
+      operationId: "rolesIdPUT"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "token"
+        required: true
+        type: "string"
+      - name: "id"
+        in: "path"
+        description: "token"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        required: false
+        schema:
+          $ref: "#/definitions/body_4"
+      responses:
+        200:
+          description: "ok"
+          schema:
+            $ref: "#/definitions/role"
+        400:
+          description: "请求参数错误"
+          schema:
+            $ref: "#/responses/parametersError"
+        500:
+          description: "服务器内部错误"
+      x-swagger-router-controller: "Role"
+    delete:
+      tags:
+      - "role"
+      summary: "删除角色"
+      operationId: "rolesIdDELETE"
+      parameters:
+      - name: "Authorization"
+        in: "header"
+        description: "token"
+        required: true
+        type: "string"
+      - name: "id"
+        in: "path"
+        description: "token"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "ok"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/role"
+        400:
+          description: "请求参数错误"
+          schema:
+            $ref: "#/responses/parametersError"
+        500:
+          description: "服务器内部错误"
+      x-swagger-router-controller: "Role"
+definitions:
+  scopes:
+    type: "array"
+    description: "权限数组"
+    items:
+      type: "string"
+      example: "admin.content.banner"
+      enum:
+      - "admin"
+      - "admin.readonly"
+      - "admin.content"
+      - "admin.content.readonly"
+  role:
+    type: "object"
+    required:
+    - "comment"
+    - "enable"
+    - "id"
+    - "name"
+    - "scopes"
+    properties:
+      id:
+        type: "string"
+        description: "角色id"
+      name:
+        type: "string"
+        description: "角色名"
+      comment:
+        type: "string"
+        description: "角色描述"
+      enable:
+        type: "boolean"
+        description: "是否启用"
+        default: true
+      scopes:
+        $ref: "#/definitions/scopes"
+    description: "角色详情"
+    example:
+      enable: true
+      name: "name"
+      comment: "comment"
+      id: "id"
+      scopes: ""
+  user:
+    type: "object"
+    required:
+    - "id"
+    - "password"
+    - "userName"
+    properties:
+      id:
+        type: "string"
+        description: "用户唯一id"
+      userName:
+        type: "string"
+        description: "用户唯一名称"
+      password:
+        type: "string"
+        format: "password"
+        description: "用户密码"
+      name:
+        type: "string"
+        description: "用户显示名，如不提供，使用userName填充"
+      phone:
+        type: "string"
+        description: "用户手机号"
+      email:
+        type: "string"
+        description: "用户邮箱"
+      enable:
+        type: "boolean"
+        description: "是否启用"
+        default: true
+      roles:
+        $ref: "#/definitions/scopes"
+    description: "用户详情"
+    example:
+      password: "password"
+      phone: "phone"
+      enable: true
+      roles: ""
+      name: "name"
+      id: "id"
+      userName: "userName"
+      email: "email"
+  body:
+    type: "object"
+    required:
+    - "password"
+    - "userName"
+    properties:
+      userName:
+        type: "string"
+        description: "用户唯一名称"
+      password:
+        type: "string"
+        format: "password"
+        description: "用户密码"
+  inline_response_200:
+    required:
+    - "expires"
+    - "scopes"
+    - "token"
+    properties:
+      token:
+        type: "string"
+        description: "接口调用凭证"
+      expires:
+        type: "integer"
+        description: "接口调用凭证有效期，单位为秒"
+      scopes:
+        $ref: "#/definitions/scopes"
+    example:
+      expires: 0
+      scopes: ""
+      token: "token"
+  inline_response_200_1:
+    properties:
+      scope:
+        type: "string"
+        example: "all permssion of user"
+        description: "权限描述"
+    example:
+      scope: "all permssion of user"
+  body_1:
+    type: "object"
+    required:
+    - "password"
+    - "userName"
+    properties:
+      userName:
+        type: "string"
+        description: "用户唯一名称"
+      password:
+        type: "string"
+        format: "password"
+        description: "用户密码"
+      name:
+        type: "string"
+        description: "用户显示名，如不提供，使用userName填充"
+      phone:
+        type: "string"
+        description: "用户手机号"
+      email:
+        type: "string"
+        description: "用户邮箱"
+      enable:
+        type: "boolean"
+        description: "是否启用"
+        default: true
+      roles:
+        type: "array"
+        description: "用户所属的角色表"
+        items:
+          type: "string"
+  body_2:
+    type: "object"
+    properties:
+      password:
+        type: "string"
+        format: "password"
+        description: "用户密码"
+      name:
+        type: "string"
+        description: "用户显示名"
+      phone:
+        type: "string"
+        description: "用户手机号"
+      email:
+        type: "string"
+        description: "用户邮箱"
+      enable:
+        type: "boolean"
+        description: "是否启用"
+      roles:
+        type: "array"
+        description: "用户所属的角色表"
+        items:
+          type: "string"
+  inline_response_200_2:
+    properties:
+      total:
+        type: "integer"
+        description: "满足查询条件的角色总数"
+        minimum: 0
+      roles:
+        type: "array"
+        items:
+          $ref: "#/definitions/role"
+    example:
+      total: 0
+      roles:
+      - enable: true
+        name: "name"
+        comment: "comment"
+        id: "id"
+        scopes: ""
+      - enable: true
+        name: "name"
+        comment: "comment"
+        id: "id"
+        scopes: ""
+  body_3:
+    type: "object"
+    required:
+    - "comment"
+    - "name"
+    - "scopes"
+    properties:
+      name:
+        type: "string"
+        description: "角色名"
+      comment:
+        type: "string"
+        description: "角色描述"
+      enable:
+        type: "boolean"
+        description: "是否启用"
+        default: true
+      scopes:
+        $ref: "#/definitions/scopes"
+  body_4:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "角色名称"
+      comment:
+        type: "string"
+        description: "角色描述"
+      enable:
+        type: "boolean"
+        description: "是否启用"
+      scopes:
+        $ref: "#/definitions/scopes"
+parameters:
+  token:
+    name: "Authorization"
+    in: "header"
+    description: "token"
+    required: true
+    type: "string"
+  id:
+    name: "id"
+    in: "path"
+    description: "token"
+    required: true
+    type: "string"
+responses:
+  parametersError:
+    description: "请求参数错误"
+    schema:
+      type: "object"
+      properties: {}
