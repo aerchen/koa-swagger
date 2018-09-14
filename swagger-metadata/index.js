@@ -389,9 +389,9 @@ exports = module.exports = function (rlOrSO, apiDeclarations) {
     }
   }
 
-  return function swaggerMetadata (req, res, next) {
-    var method = req.method.toLowerCase();
-    var path = parseurl(req).pathname;
+  return async function swaggerMetadata (ctx, next) {
+    let {method, path} = ctx;
+    method = method.toLowerCase();
     var cacheEntry;
     var match;
     var metadata;
@@ -401,12 +401,12 @@ exports = module.exports = function (rlOrSO, apiDeclarations) {
       return _.isArray(match);
     });
 
-    debug('%s %s', req.method, req.url);
+    debug('%s %s', method, ctx.url);
     debug('  Is a Swagger path: %s', !_.isUndefined(cacheEntry));
 
     // Request does not match an API defined in the Swagger document(s)
     if (!cacheEntry) {
-      return next();
+      return await next();
     }
 
     metadata = swaggerVersion === '1.2' ?
@@ -439,15 +439,22 @@ exports = module.exports = function (rlOrSO, apiDeclarations) {
 
     metadata.swaggerVersion = swaggerVersion;
 
-    req.swagger = metadata;
-
     debug('  Is a Swagger operation: %s', !_.isUndefined(metadata.operation));
 
     if (metadata.operation) {
-      // Process the operation parameters
-      return processOperationParameters(metadata, cacheEntry.keys, match, req, res, next, debug);
-    } else {
-      return next();
+      const processer = function() {
+        return new Promise((resolve, reject) => {
+          // Process the operation parameters
+          return processOperationParameters(metadata, cacheEntry.keys, match, ctx.req, ctx.res, err => {
+            err ? reject(err) : resolve();
+          }, debug);
+        });
+      };
+      await processer();
     }
+
+    ctx.metadata = metadata;
+    ctx.params = metadata.params;
+    await next();
   };
 };

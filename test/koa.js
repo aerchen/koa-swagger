@@ -19,10 +19,13 @@ const options = {
 };
 // Serve the Swagger documents and Swagger UI
 app.use(require('../swagger-ui')(swaggerDoc, options));
+const metadata = require('../swagger-metadata')(swaggerDoc);
+app.use(metadata);
 
 // request handler
 app.use(async (ctx, next) => {
-  ctx.body = ctx.request;
+  //ctx.body = ctx.request;
+  ctx.body = ctx.params;
 });
 
 const port = 8090;
