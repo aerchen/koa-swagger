@@ -453,7 +453,7 @@ exports = module.exports = function (rlOrSO, apiDeclarations) {
       await processer();
     }
 
-    ctx.metadata = metadata;
+    ctx.swagger = metadata;
     ctx.params = metadata.params;
     await next();
   };

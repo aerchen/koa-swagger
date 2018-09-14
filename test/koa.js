@@ -7,7 +7,11 @@ const koa = require('koa');
 
 const app = new koa();
 app.use(async (ctx, next) => {
-  await next().catch(console.error.bind(null, 'errorHandler'));
+  await next().catch(err => {
+    console.error('errorHandler', err);
+    ctx.status = 500;
+    ctx.body = err;
+  });
 });
 
 // The Swagger document (require it, build it programmatically, fetch it from a URL, ...)
@@ -19,8 +23,8 @@ const options = {
 };
 // Serve the Swagger documents and Swagger UI
 app.use(require('../swagger-ui')(swaggerDoc, options));
-const metadata = require('../swagger-metadata')(swaggerDoc);
-app.use(metadata);
+app.use(require('../swagger-metadata')(swaggerDoc));
+app.use(require('../swagger-metadata/swagger-request-validator')());
 
 // request handler
 app.use(async (ctx, next) => {
