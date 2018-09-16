@@ -24,7 +24,23 @@ const options = {
 // Serve the Swagger documents and Swagger UI
 app.use(require('../swagger-ui')(swaggerDoc, options));
 app.use(require('../swagger-metadata')(swaggerDoc));
-app.use(require('../swagger-metadata/swagger-request-validator')());
+const validator = require('../swagger-metadata/swagger-request-validator')();
+app.use(async (ctx, next) => {
+  try {
+    await validator(ctx, next);
+  }
+  catch (err) {
+    ctx.status = 400;
+    ctx.body = {
+      code: 40001,
+      message: err.message,
+      info: err,
+    };
+    return;
+  }
+
+  await next();
+});
 
 // request handler
 app.use(async (ctx, next) => {
